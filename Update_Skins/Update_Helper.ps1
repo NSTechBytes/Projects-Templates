@@ -177,18 +177,18 @@ if (Test-Path -Path $rainmeterPath) {
     Start-Process -FilePath $rainmeterPath
     
     # Wait for a few seconds to allow Rainmeter to fully start
-    Start-Sleep -Seconds 5
+#    Start-Sleep -Seconds 5
     
     # Construct and execute the activation command
-    $activationCommand = "!ActivateConfig $skinName\Startup Main.ini"
+    #$activationCommand = "!ActivateConfig $skinName\Startup Main.ini"
     
     # Start the activation command with the Rainmeter executable
-    Start-Process -FilePath $rainmeterPath -ArgumentList $activationCommand
+    #Start-Process -FilePath $rainmeterPath -ArgumentList $activationCommand
     
-    Write-Host "Activated skin using command: $activationCommand"
-} else {
-    Write-Host "Rainmeter executable not found!"
-}
+#   Write-Host "Activated skin using command: $activationCommand"
+#} else {
+#    Write-Host "Rainmeter executable not found!"
+#}
 
 # Remove the nstechbytes folder
 if (Test-Path -Path $destinationFolder) {
