@@ -186,9 +186,9 @@ if (Test-Path -Path $rainmeterPath) {
     #Start-Process -FilePath $rainmeterPath -ArgumentList $activationCommand
     
 #   Write-Host "Activated skin using command: $activationCommand"
-#} else {
-#    Write-Host "Rainmeter executable not found!"
-#}
+} else {
+   Write-Host "Rainmeter executable not found!"
+}
 
 # Remove the nstechbytes folder
 if (Test-Path -Path $destinationFolder) {
