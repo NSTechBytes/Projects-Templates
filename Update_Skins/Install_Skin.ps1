@@ -190,21 +190,45 @@ Remove-Item $tempVersionFile
 # Find the skin path using the function
 $skinsDirectory = Get-RainmeterSkinsFolder
 
+function Take-OwnershipAndRemoveItem {
+    param (
+        [string]$path
+    )
+
+    if (Test-Path -Path $path) {
+        try {
+            # Take ownership of the file/directory
+            Write-Host "Taking ownership of $path"
+            Start-Process "cmd.exe" -ArgumentList "/c takeown /f `"$path`" /r /d y && icacls `"$path`" /grant administrators:F /t" -Verb RunAs -Wait -NoNewWindow
+
+            # Now attempt to remove it
+            Write-Host "Removing $path"
+            Remove-Item -Path $path -Recurse -Force
+            Write-Host "Successfully removed $path"
+        } catch {
+            Write-Host "Error: Failed to remove $path. Error details: $_"
+        }
+    } else {
+        Write-Host "Path $path does not exist."
+    }
+}
+
+# Example usage:
+Take-OwnershipAndRemoveItem -path $skinToRemove
+
 # Remove the existing skin folder if it exists
 if (Test-Path -Path $skinsDirectory) {
     # Specify the exact path for the skin to remove
     $skinToRemove = Join-Path -Path $skinsDirectory -ChildPath $skinName
 
     if (Test-Path -Path $skinToRemove) {
-        Remove-Item -Path $skinToRemove -Recurse -Force
-        Write-Host "Removed the existing skin folder: $skinToRemove"
+        Take-OwnershipAndRemoveItem -path $skinToRemove
     } else {
         Write-Host "No existing skin folder found to remove: $skinToRemove"
     }
 } else {
     Write-Host "No Rainmeter skins folder found."
 }
-
 #=================================================================================================================================#
 #                                                      Stop Rainmeter                                                             #                          
 #=================================================================================================================================#
