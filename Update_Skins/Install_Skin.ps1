@@ -255,7 +255,22 @@ if (Test-Path -Path $skinsDirectory) {
     Write-Host "No Rainmeter skins folder found."
 }
 
+#=================================================================================================================================#
+#                                                      Copy Skin To Skins Folder                                                  #                          
+#=================================================================================================================================#
 
+Start-Sleep -Seconds 1
+
+# Copy the extracted skin folder to the Rainmeter skins path
+$extractedSkinFolder = Join-Path -Path $extractionFolder -ChildPath "Skins\$skinName"
+
+if (Test-Path -Path $extractedSkinFolder) {
+    $destinationSkinPath = Join-Path -Path $skinsDirectory -ChildPath $skinName
+    Copy-Item -Path $extractedSkinFolder -Destination $destinationSkinPath -Recurse -Force
+    Write-Host "Copied the extracted folder to: $destinationSkinPath"
+} else {
+    Write-Host "Extracted skin folder does not exist: $extractedSkinFolder"
+}
 
 #=================================================================================================================================#
 #                                                      Plugins Logic                                                              #                          
