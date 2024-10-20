@@ -215,9 +215,13 @@ function Take-OwnershipAndRemoveItem {
 
     if (Test-Path -Path $path) {
         try {
+            # Escaping quotes for the path
+            $escapedPath = "`"$path`""
+
             # Take ownership of the file/directory
             Write-Host "Taking ownership of $path"
-            Start-Process "cmd.exe" -ArgumentList "/c takeown /f `"$path`" /r /d y && icacls `"$path`" /grant administrators:F /t" -Verb RunAs -Wait -NoNewWindow
+            Invoke-Expression "takeown /f $escapedPath /r /d y"
+            Invoke-Expression "icacls $escapedPath /grant administrators:F /t"
 
             # Now attempt to remove it
             Write-Host "Removing $path"
@@ -230,6 +234,7 @@ function Take-OwnershipAndRemoveItem {
         Write-Host "Path $path does not exist."
     }
 }
+
 
 #=================================================================================================================================#
 #                                                      Remove Existing Skin Folder                                                #
