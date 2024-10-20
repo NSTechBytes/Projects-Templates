@@ -54,7 +54,7 @@ if (Is-RainmeterInstalled) {
         Write-Host "Downloading Rainmeter from $rainmeterUrl..."
 
         # Download the latest Rainmeter installer
-        $installerPath = "$env:TEMP\RainmeterInstaller.exe"  # Define the path for the installer
+        $installerPath = "$env:TEMP\RainmeterInstaller.exe"
         Invoke-WebRequest -Uri $rainmeterUrl -OutFile $installerPath
 
         Write-Host "Download complete. Prompting for admin rights..."
@@ -66,7 +66,7 @@ if (Is-RainmeterInstalled) {
             Write-Host "Rainmeter installation completed successfully."
         } else {
             Write-Host "Installation was canceled or failed. Exiting script."
-            Remove-Item -Path $installerPath -Force  # Clean up the installer if canceled or failed
+            Remove-Item -Path $installerPath -Force
             exit
         }
 
@@ -81,7 +81,6 @@ if (Is-RainmeterInstalled) {
 #                                                      Run The Rainmeter after Installation                                       #
 #=================================================================================================================================#
 
-# Start Rainmeter application
 $rainmeterPath = Join-Path -Path $env:ProgramFiles -ChildPath "Rainmeter\Rainmeter.exe"
 if (-Not (Test-Path -Path $rainmeterPath)) {
     $rainmeterPath = Join-Path -Path $env:ProgramFiles(x86) -ChildPath "Rainmeter\Rainmeter.exe"
@@ -187,8 +186,27 @@ Write-Host "Extracted $skinName to $extractionFolder"
 # Clean up the temporary version file
 Remove-Item $tempVersionFile
 
-# Find the skin path using the function
-$skinsDirectory = Get-RainmeterSkinsFolder
+#=================================================================================================================================#
+#                                                      Stop Rainmeter                                                             #
+#=================================================================================================================================#
+
+function Stop-Rainmeter {
+    $rainmeterProcess = Get-Process -Name "Rainmeter" -ErrorAction SilentlyContinue
+
+    if ($rainmeterProcess) {
+        Write-Host "Rainmeter is running. Stopping it..."
+        Stop-Process -Name "Rainmeter" -Force 
+        Write-Host "Rainmeter has been stopped."
+    } else {
+        Write-Host "Rainmeter is not running."
+    }
+}
+
+# Stop Rainmeter if it's running
+Stop-Rainmeter
+#=================================================================================================================================#
+#                                    Function to Take Ownership and Remove a Directory or File                                    #
+#=================================================================================================================================#
 
 function Take-OwnershipAndRemoveItem {
     param (
@@ -213,10 +231,12 @@ function Take-OwnershipAndRemoveItem {
     }
 }
 
-# Example usage:
-Take-OwnershipAndRemoveItem -path $skinToRemove
+#=================================================================================================================================#
+#                                                      Remove Existing Skin Folder                                                #
+#=================================================================================================================================#
 
-# Remove the existing skin folder if it exists
+$skinsDirectory = Get-RainmeterSkinsFolder
+
 if (Test-Path -Path $skinsDirectory) {
     # Specify the exact path for the skin to remove
     $skinToRemove = Join-Path -Path $skinsDirectory -ChildPath $skinName
@@ -229,41 +249,8 @@ if (Test-Path -Path $skinsDirectory) {
 } else {
     Write-Host "No Rainmeter skins folder found."
 }
-#=================================================================================================================================#
-#                                                      Stop Rainmeter                                                             #                          
-#=================================================================================================================================#
 
-function Stop-Rainmeter {
-    $rainmeterProcess = Get-Process -Name "Rainmeter" -ErrorAction SilentlyContinue
 
-    if ($rainmeterProcess) {
-        Write-Host "Rainmeter is running. Stopping it..."
-        Stop-Process -Name "Rainmeter" -Force 
-        Write-Host "Rainmeter has been stopped."
-    } else {
-        Write-Host "Rainmeter is not running."
-    }
-}
-
-# Stop Rainmeter if it's running
-Stop-Rainmeter
-
-#=================================================================================================================================#
-#                                                      Copy Skin To Skins Folder                                                  #                          
-#=================================================================================================================================#
-
-Start-Sleep -Seconds 1
-
-# Copy the extracted skin folder to the Rainmeter skins path
-$extractedSkinFolder = Join-Path -Path $extractionFolder -ChildPath "Skins\$skinName"
-
-if (Test-Path -Path $extractedSkinFolder) {
-    $destinationSkinPath = Join-Path -Path $skinsDirectory -ChildPath $skinName
-    Copy-Item -Path $extractedSkinFolder -Destination $destinationSkinPath -Recurse -Force
-    Write-Host "Copied the extracted folder to: $destinationSkinPath"
-} else {
-    Write-Host "Extracted skin folder does not exist: $extractedSkinFolder"
-}
 
 #=================================================================================================================================#
 #                                                      Plugins Logic                                                              #                          
