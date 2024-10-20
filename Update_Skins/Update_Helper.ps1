@@ -71,9 +71,27 @@ $versionUrl = "https://raw.githubusercontent.com/NSTechBytes/$skinName/main/%40R
 $destinationFolder = "C:\nstechbytes"
 $extractionFolder = "$destinationFolder\$skinName"
 
-# Download the Version.nek file
+# Retry logic and error handling for Version.nek file download
+$retryCount = 3
+$timeout = 30
 $tempVersionFile = "$env:TEMP\Version.nek"
-Invoke-WebRequest -Uri $versionUrl -OutFile $tempVersionFile
+$success = $false
+
+for ($i = 0; $i -lt $retryCount; $i++) {
+    try {
+        Write-Host "Attempting to download the version file... (Attempt $($i+1) of $retryCount)"
+        Invoke-WebRequest -Uri $versionUrl -OutFile $tempVersionFile -TimeoutSec $timeout -Headers @{ 'User-Agent' = 'Mozilla/5.0' }
+        $success = $true
+        break
+    } catch {
+        Write-Host "Download failed on attempt $($i+1). Retrying..."
+    }
+}
+
+if (-not $success) {
+    Write-Host "Failed to download the version file after $retryCount attempts."
+    exit
+}
 
 # Read the Version.nek file and extract the version number
 $versionData = Get-Content $tempVersionFile
@@ -91,10 +109,26 @@ if (-Not (Test-Path -Path $destinationFolder)) {
 # Destination file path
 $destination = "$destinationFolder\${skinName}_$version.rmskin"
 
-# Download the skin using the retrieved version
-Invoke-WebRequest -Uri $url -OutFile $destination
+# Retry logic and error handling for the skin download
+$success = $false
 
-Write-Host "Downloaded $skinName version $version to $destination"
+for ($i = 0; $i -lt $retryCount; $i++) {
+    try {
+        Write-Host "Attempting to download the skin... (Attempt $($i+1) of $retryCount)"
+        Invoke-WebRequest -Uri $url -OutFile $destination -TimeoutSec $timeout -Headers @{ 'User-Agent' = 'Mozilla/5.0' }
+        $success = $true
+        break
+    } catch {
+        Write-Host "Download failed on attempt $($i+1). Retrying..."
+    }
+}
+
+if (-not $success) {
+    Write-Host "Failed to download the skin after $retryCount attempts."
+    exit
+} else {
+    Write-Host "Downloaded $skinName version $version to $destination"
+}
 
 # Create extraction folder if it doesn't exist
 if (-Not (Test-Path -Path $extractionFolder)) {
@@ -175,26 +209,14 @@ if (-Not (Test-Path -Path $rainmeterPath)) {
 
 if (Test-Path -Path $rainmeterPath) {
     Start-Process -FilePath $rainmeterPath
-    
-    # Wait for a few seconds to allow Rainmeter to fully start
-#    Start-Sleep -Seconds 5
-    
-    # Construct and execute the activation command
-    #$activationCommand = "!ActivateConfig $skinName\Startup Main.ini"
-    
-    # Start the activation command with the Rainmeter executable
-    #Start-Process -FilePath $rainmeterPath -ArgumentList $activationCommand
-    
-#   Write-Host "Activated skin using command: $activationCommand"
 } else {
-   Write-Host "Rainmeter executable not found!"
+    Write-Host "Rainmeter executable not found!"
 }
 
 # Remove the nstechbytes folder
 if (Test-Path -Path $destinationFolder) {
     Remove-Item -Path $destinationFolder -Recurse -Force
-    Write-Host "Removed the nstechbytes folder: $destinationFolder"
-} else {
-    Write-Host "nstechbytes folder not found!"
+    Write-Host "Cleaned up the nstechbytes temporary folder."
 }
 
+Write-Host "Update process completed!"
